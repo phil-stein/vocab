@@ -1,0 +1,28 @@
+# executables
+*.exe
+*.pdb
+
+
+# c object files
+*.o
+*.obj
+
+gmon.out
+
+# vim-files
+*~
+*.swp
+*.swo
+
+# rar-files
+*.rar
+*.zip
+
+# vs files
+/.vs
+**/.vs
+
+# .cache folder 
+.cache/*
+
+compile_commands.json
