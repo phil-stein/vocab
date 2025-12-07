@@ -1,4 +1,5 @@
 @echo off
 
 
-odin run . -debug
+odin build src -out:vocab.exe -debug
+vocab.exe -win

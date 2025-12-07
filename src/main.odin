@@ -1,11 +1,12 @@
 package vocab
 
-import      "core:os"
-import      "core:fmt"
-import      "core:unicode/utf8"
-import str  "core:strings"
-import      "core:math/rand"
-import win  "core:sys/windows"
+import        "core:os"
+import        "core:fmt"
+import        "core:unicode/utf8"
+import str    "core:strings"
+import        "core:math/rand"
+import win    "core:sys/windows"
+import linalg "core:math/linalg/glsl"
 
 vocab_t :: struct
 {
@@ -37,6 +38,8 @@ compare_t :: struct
 }
 
 vocab_arr : [dynamic]vocab_t
+
+sb_answer: str.Builder
 
 read_vocab_files :: proc( file_name: string )
 {
@@ -141,23 +144,41 @@ main :: proc()
     win.SetConsoleOutputCP( win.CODEPAGE(win.CP_UTF8) )
   }
 
-  read_vocab_files( "01.vocab" )
+  use_window := false
 
-  running := true
-  for running
+  for arg in os.args[1:]
   {
-    fmt.print( "\n" )
-    display_vocab_question()
-    fmt.print( "\n" )
-    fmt.println( "──────────────────────────────" )
+    if arg == "-win"
+    {
+      use_window = true
+    }
   }
 
+  read_vocab_files( "assets/01.vocab" )
+
+  if use_window
+  {
+    sb_answer = str.builder_make()
+    win_main()
+  }
+  else
+  {
+    running := true
+    for running
+    {
+      fmt.print( "\n" )
+      voc := rand.choice( vocab_arr[:] )
+      display_vocab_question_terminal( voc )
+      fmt.print( "\n" )
+      fmt.println( "──────────────────────────────" )
+    }
+  }
 }
 
-display_vocab_question :: proc()
+display_vocab_question_terminal :: proc( voc: vocab_t )
 {
-
-  voc := rand.choice( vocab_arr[:] )
+  voc := voc
+  // voc := rand.choice( vocab_arr[:] )
 
   fmt.println( pf_mode_str( PF_Mode.NORMAL, PF_Fg.BLACK, PF_Bg.BLUE ), "E", pf_style_reset_str(),
                pf_mode_str( PF_Mode.NORMAL, PF_Fg.BLACK, PF_Bg.BLUE ), "N", pf_style_reset_str(),
@@ -381,4 +402,31 @@ display_vocab_question :: proc()
   
   fmt.println( pf_style_str( PF_Mode.NORMAL, correct ? PF_Fg.GREEN : PF_Fg.RED ), "  └ ", voc.error_rate, " error rate", pf_style_reset_str(), sep="" )
 
+}
+
+display_vocab_question_win :: proc( voc: vocab_t )
+{
+  voc := voc
+  // voc := rand.choice( vocab_arr[:] )
+
+  LINE_HEIGHT :: 0.075
+  text_y_pos : f32 = 0.75
+  text_draw_string( fmt.tprint( "EN:", voc.en ), linalg.vec2{ -0.95, text_y_pos } ); text_y_pos -= LINE_HEIGHT 
+  text_draw_string( fmt.tprint( "DE:", voc.de ), linalg.vec2{ -0.95, text_y_pos } ); text_y_pos -= LINE_HEIGHT
+  
+  text_draw_string( "FR:", linalg.vec2{ -0.95, text_y_pos } ); 
+  text_draw_string( "FR:", linalg.vec2{ -0.95, text_y_pos } );  
+  if keystates[KEY.BACKSPACE].pressed
+  {
+    s := str.to_string( sb_answer )
+    str.builder_reset( &sb_answer )
+    end := len(s)-1 >= 0 ? len(s)-1 : 0
+    str.write_string( &sb_answer, s[:end] )
+  }
+  if data.text_input_new
+  {
+    str.write_rune( &sb_answer, data.text_input_rune )
+  }
+  text_draw_string( str.to_string( sb_answer ), linalg.vec2{ -0.84, text_y_pos } ); 
+  text_y_pos -= LINE_HEIGHT
 }
