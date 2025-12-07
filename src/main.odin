@@ -404,6 +404,8 @@ display_vocab_question_terminal :: proc( voc: vocab_t )
 
 }
 
+input_active := true
+// answer : string
 display_vocab_question_win :: proc( voc: vocab_t )
 {
   voc := voc
@@ -414,19 +416,36 @@ display_vocab_question_win :: proc( voc: vocab_t )
   text_draw_string( fmt.tprint( "EN:", voc.en ), linalg.vec2{ -0.95, text_y_pos } ); text_y_pos -= LINE_HEIGHT 
   text_draw_string( fmt.tprint( "DE:", voc.de ), linalg.vec2{ -0.95, text_y_pos } ); text_y_pos -= LINE_HEIGHT
   
-  text_draw_string( "FR:", linalg.vec2{ -0.95, text_y_pos } ); 
-  text_draw_string( "FR:", linalg.vec2{ -0.95, text_y_pos } );  
-  if keystates[KEY.BACKSPACE].pressed
-  {
-    s := str.to_string( sb_answer )
-    str.builder_reset( &sb_answer )
-    end := len(s)-1 >= 0 ? len(s)-1 : 0
-    str.write_string( &sb_answer, s[:end] )
-  }
-  if data.text_input_new
-  {
-    str.write_rune( &sb_answer, data.text_input_rune )
-  }
-  text_draw_string( str.to_string( sb_answer ), linalg.vec2{ -0.84, text_y_pos } ); 
+  str_len : i32 = 0
+  str_len += text_draw_string( "FR:", linalg.vec2{ -0.95, text_y_pos } ); 
+
+  str_len += text_draw_string( str.to_string( sb_answer ), linalg.vec2{ -0.84, text_y_pos } ); 
   text_y_pos -= LINE_HEIGHT
+
+  if input_active
+  {
+    text_draw_glyph( linalg.vec2{ -0.95 + 0.0272 * ( f32(str_len) +0.5 ), text_y_pos + LINE_HEIGHT }, '|' )
+
+    if keystates[KEY.BACKSPACE].pressed
+    {
+      s := str.to_string( sb_answer )
+      str.builder_reset( &sb_answer )
+      end := len(s)-1 >= 0 ? len(s)-1 : 0
+      str.write_string( &sb_answer, s[:end] )
+    }
+    if data.text_input_new
+    {
+      str.write_rune( &sb_answer, data.text_input_rune )
+    }
+
+    if keystates[KEY.ENTER].pressed
+    {
+      // answer = str.to_string( sb_answer )
+      input_active = false
+    }
+  }
+  else
+  {
+    // @TODO: put :227-397 into compare function
+  }
 }

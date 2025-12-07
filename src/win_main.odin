@@ -94,7 +94,7 @@ win_main :: proc()
       data.wireframe_mode_enabled  = !data.wireframe_mode_enabled 
       data.text.draw_solid         = !data.text.draw_solid 
     }
-    if keystates[KEY.ENTER].pressed
+    if keystates[KEY.LEFT_CONTROL].down && keystates[KEY.ENTER].pressed
     { 
       data.text.draw_solid = !data.text.draw_solid 
     }
