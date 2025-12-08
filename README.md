@@ -14,5 +14,6 @@ for learning french using german & english
   - [ ] style gui version
     - [ ] drawing rects
     - [ ] drawing imgs 
+    - [ ] text line height relative to pixels 
 
   
