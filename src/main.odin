@@ -159,7 +159,8 @@ main :: proc()
   if use_window
   {
     sb_answer = str.builder_make()
-    win_main()
+    voc := rand.choice( vocab_arr[:] )
+    win_main( &voc )
   }
   else
   {
@@ -272,7 +273,7 @@ display_vocab_question_terminal :: proc( voc: vocab_t )
 
 input_active := true
 // answer : string
-display_vocab_question_win :: proc( voc: vocab_t )
+display_vocab_question_win :: proc( voc: ^vocab_t )
 {
   voc := voc
   // voc := rand.choice( vocab_arr[:] )
@@ -312,16 +313,28 @@ display_vocab_question_win :: proc( voc: vocab_t )
   }
   else
   {
-    comp_arr, comp_flag, correct := vocab_compare( str.to_string( sb_answer ), &voc )
+    comp_arr, comp_flag, correct := vocab_compare( str.to_string( sb_answer ), voc )
     
     str_len += text_draw_string( fmt.tprint( correct ? "correct" : "false" ), linalg.vec2{ -0.95, text_y_pos } ); 
     text_y_pos -= LINE_HEIGHT
     
-    str_len += text_draw_string( str.to_string( sb_answer ), linalg.vec2{ -0.95, text_y_pos } ); 
+    str_len += text_draw_string( fmt.tprint( "answer:", str.to_string( sb_answer ) ), linalg.vec2{ -0.95, text_y_pos } ); 
     text_y_pos -= LINE_HEIGHT
     
-    str_len += text_draw_string( voc.fr, linalg.vec2{ -0.95, text_y_pos } ); 
+    str_len += text_draw_string( fmt.tprint( "vocab: ", voc.fr ), linalg.vec2{ -0.95, text_y_pos } ); 
     text_y_pos -= LINE_HEIGHT
+    
+    text_y_pos -= LINE_HEIGHT
+    str_len += text_draw_string( "press enter to continue", linalg.vec2{ -0.95, text_y_pos } ); 
+    text_y_pos -= LINE_HEIGHT
+
+    
+    if keystates[KEY.ENTER].pressed
+    {
+      voc^ = rand.choice( vocab_arr[:] )
+      input_active = true 
+      str.builder_reset( &sb_answer )
+    }
   }
 }
 

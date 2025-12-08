@@ -36,7 +36,7 @@ import        "core:math/rand"
 watch            : time.Stopwatch
 
 
-win_main :: proc() 
+win_main :: proc( voc: ^vocab_t ) 
 {
 
   // setup context
@@ -69,8 +69,7 @@ win_main :: proc()
   gl.Enable(gl.BLEND)
   gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 
-  voc := rand.choice( vocab_arr[:] )
-
+  
   // Main loop.
   for !window_should_close()
   {
