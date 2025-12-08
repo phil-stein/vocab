@@ -223,10 +223,113 @@ display_vocab_question_terminal :: proc( voc: vocab_t )
   //   fmt.println( "false:", voc.fr )
   // }
 
+  comp_arr, comp_flag, correct := vocab_compare( answer, &voc )
 
-  comp_arr : [dynamic]compare_t
-  defer delete( comp_arr )
-  comp_flag : bit_set[Compare_Type]
+  pf_bracket := PF_Fg.WHITE
+  if      Compare_Type.Wrong            in comp_flag { pf_bracket = PF_Fg.RED } 
+  else if Compare_Type.Wrong_Accent     in comp_flag { pf_bracket = PF_Fg.YELLOW } 
+  else if Compare_Type.Case_Sensitivity in comp_flag { pf_bracket = PF_Fg.CYAN } 
+  else if Compare_Type.Incorrect_Length in comp_flag { pf_bracket = PF_Fg.PURPLE } 
+  else                                               { pf_bracket = PF_Fg.GREEN } 
+    
+  // line01_sb := str.builder_make()
+  fmt.println( pf_style_str( PF_Mode.NORMAL, pf_bracket ), "  ┌ ", pf_style_reset_str(), answer, sep="" )
+  line02_sb := str.builder_make()
+  str.write_string( &line02_sb, fmt.tprint( pf_style_str( PF_Mode.NORMAL, pf_bracket ), "  ├─", pf_style_reset_str(), sep="" ) ) // │
+
+  incorrect_length_idx := -1
+  for comp, i in comp_arr
+  {
+    switch comp.type
+    {
+      case Compare_Type.Incorrect_Length:
+      {
+        incorrect_length_idx = i
+      }
+      case Compare_Type.Correct:          { str.write_string( &line02_sb, fmt.tprint( pf_style_str( PF_Mode.NORMAL, pf_bracket ), "─", pf_style_reset_str(), sep="" ) ) }
+      case Compare_Type.Wrong:            
+      { str.write_string( &line02_sb, 
+        fmt.tprint( pf_style_str( PF_Mode.NORMAL, PF_Fg.RED ), "", pf_style_reset_str(), sep="" ) ) 
+      }
+      case Compare_Type.Case_Sensitivity: 
+      { str.write_string( &line02_sb, 
+        fmt.tprint( pf_style_str( PF_Mode.NORMAL, PF_Fg.CYAN ), "", pf_style_reset_str(), sep="" ) ) 
+      }
+      case Compare_Type.Wrong_Accent:             // { str.write_string( &line02_sb, "^" ) }
+      { str.write_string( &line02_sb, 
+        fmt.tprint( pf_style_str( PF_Mode.NORMAL, PF_Fg.YELLOW ), "", pf_style_reset_str(), sep="" ) ) 
+      }
+    }
+  }
+
+  fmt.println( str.to_string( line02_sb ) )
+  
+  fmt.println( pf_style_str( PF_Mode.NORMAL, pf_bracket ), "  ├ ", pf_style_reset_str(), voc.fr, sep="" ) // └
+  
+  fmt.println( pf_style_str( PF_Mode.NORMAL, correct ? PF_Fg.GREEN : PF_Fg.RED ), "  └ ", voc.error_rate, " error rate", pf_style_reset_str(), sep="" )
+
+}
+
+input_active := true
+// answer : string
+display_vocab_question_win :: proc( voc: vocab_t )
+{
+  voc := voc
+  // voc := rand.choice( vocab_arr[:] )
+
+  LINE_HEIGHT :: 0.075
+  text_y_pos : f32 = 0.75
+  text_draw_string( fmt.tprint( "EN:", voc.en ), linalg.vec2{ -0.95, text_y_pos } ); text_y_pos -= LINE_HEIGHT 
+  text_draw_string( fmt.tprint( "DE:", voc.de ), linalg.vec2{ -0.95, text_y_pos } ); text_y_pos -= LINE_HEIGHT
+  
+  str_len : i32 = 0
+  str_len += text_draw_string( "FR:", linalg.vec2{ -0.95, text_y_pos } ); 
+
+  str_len += text_draw_string( str.to_string( sb_answer ), linalg.vec2{ -0.84, text_y_pos } ); 
+  text_y_pos -= LINE_HEIGHT
+
+  if input_active
+  {
+    text_draw_glyph( linalg.vec2{ -0.95 + 0.0272 * ( f32(str_len) +0.5 ), text_y_pos + LINE_HEIGHT }, '|' )
+
+    if keystates[KEY.BACKSPACE].pressed
+    {
+      s := str.to_string( sb_answer )
+      str.builder_reset( &sb_answer )
+      end := len(s)-1 >= 0 ? len(s)-1 : 0
+      str.write_string( &sb_answer, s[:end] )
+    }
+    if data.text_input_new
+    {
+      str.write_rune( &sb_answer, data.text_input_rune )
+    }
+
+    if keystates[KEY.ENTER].pressed
+    {
+      // answer = str.to_string( sb_answer )
+      input_active = false
+    }
+  }
+  else
+  {
+    comp_arr, comp_flag, correct := vocab_compare( str.to_string( sb_answer ), &voc )
+    
+    str_len += text_draw_string( fmt.tprint( correct ? "correct" : "false" ), linalg.vec2{ -0.95, text_y_pos } ); 
+    text_y_pos -= LINE_HEIGHT
+    
+    str_len += text_draw_string( str.to_string( sb_answer ), linalg.vec2{ -0.95, text_y_pos } ); 
+    text_y_pos -= LINE_HEIGHT
+    
+    str_len += text_draw_string( voc.fr, linalg.vec2{ -0.95, text_y_pos } ); 
+    text_y_pos -= LINE_HEIGHT
+  }
+}
+
+vocab_compare :: proc( answer: string, voc: ^vocab_t ) -> ( comp_arr: [dynamic]compare_t, comp_flag: bit_set[Compare_Type], correct: bool )
+{
+  
+  // defer delete( comp_arr )
+  
 
   answer_r := utf8.string_to_runes( answer, context.temp_allocator )  
   voc_fr_r := utf8.string_to_runes( voc.fr, context.temp_allocator )  
@@ -353,99 +456,15 @@ display_vocab_question_terminal :: proc( voc: vocab_t )
   // fmt.println( comp_flag )
   // fmt.println( comp_arr )
 
-  correct := false
-  pf_bracket := PF_Fg.WHITE
-  if      Compare_Type.Wrong            in comp_flag { pf_bracket = PF_Fg.RED } 
-  else if Compare_Type.Wrong_Accent     in comp_flag { pf_bracket = PF_Fg.YELLOW } 
-  else if Compare_Type.Case_Sensitivity in comp_flag { pf_bracket = PF_Fg.CYAN } 
-  else if Compare_Type.Incorrect_Length in comp_flag { pf_bracket = PF_Fg.PURPLE } 
-  else 
+  correct = false
+  if      Compare_Type.Wrong not_in comp_flag && 
+          Compare_Type.Wrong_Accent not_in comp_flag && 
+          Compare_Type.Case_Sensitivity not_in comp_flag && 
+          Compare_Type.Incorrect_Length not_in comp_flag 
   { 
-    pf_bracket = PF_Fg.GREEN 
     voc.error_rate -= ERROR_RATE_CORRECT
     correct = true
   } 
-    
-  // line01_sb := str.builder_make()
-  fmt.println( pf_style_str( PF_Mode.NORMAL, pf_bracket ), "  ┌ ", pf_style_reset_str(), answer, sep="" )
-  line02_sb := str.builder_make()
-  str.write_string( &line02_sb, fmt.tprint( pf_style_str( PF_Mode.NORMAL, pf_bracket ), "  ├─", pf_style_reset_str(), sep="" ) ) // │
 
-  incorrect_length_idx := -1
-  for comp, i in comp_arr
-  {
-    switch comp.type
-    {
-      case Compare_Type.Incorrect_Length:
-      {
-        incorrect_length_idx = i
-      }
-      case Compare_Type.Correct:          { str.write_string( &line02_sb, fmt.tprint( pf_style_str( PF_Mode.NORMAL, pf_bracket ), "─", pf_style_reset_str(), sep="" ) ) }
-      case Compare_Type.Wrong:            
-      { str.write_string( &line02_sb, 
-        fmt.tprint( pf_style_str( PF_Mode.NORMAL, PF_Fg.RED ), "", pf_style_reset_str(), sep="" ) ) 
-      }
-      case Compare_Type.Case_Sensitivity: 
-      { str.write_string( &line02_sb, 
-        fmt.tprint( pf_style_str( PF_Mode.NORMAL, PF_Fg.CYAN ), "", pf_style_reset_str(), sep="" ) ) 
-      }
-      case Compare_Type.Wrong_Accent:             // { str.write_string( &line02_sb, "^" ) }
-      { str.write_string( &line02_sb, 
-        fmt.tprint( pf_style_str( PF_Mode.NORMAL, PF_Fg.YELLOW ), "", pf_style_reset_str(), sep="" ) ) 
-      }
-    }
-  }
-
-  fmt.println( str.to_string( line02_sb ) )
-  
-  fmt.println( pf_style_str( PF_Mode.NORMAL, pf_bracket ), "  ├ ", pf_style_reset_str(), voc.fr, sep="" ) // └
-  
-  fmt.println( pf_style_str( PF_Mode.NORMAL, correct ? PF_Fg.GREEN : PF_Fg.RED ), "  └ ", voc.error_rate, " error rate", pf_style_reset_str(), sep="" )
-
-}
-
-input_active := true
-// answer : string
-display_vocab_question_win :: proc( voc: vocab_t )
-{
-  voc := voc
-  // voc := rand.choice( vocab_arr[:] )
-
-  LINE_HEIGHT :: 0.075
-  text_y_pos : f32 = 0.75
-  text_draw_string( fmt.tprint( "EN:", voc.en ), linalg.vec2{ -0.95, text_y_pos } ); text_y_pos -= LINE_HEIGHT 
-  text_draw_string( fmt.tprint( "DE:", voc.de ), linalg.vec2{ -0.95, text_y_pos } ); text_y_pos -= LINE_HEIGHT
-  
-  str_len : i32 = 0
-  str_len += text_draw_string( "FR:", linalg.vec2{ -0.95, text_y_pos } ); 
-
-  str_len += text_draw_string( str.to_string( sb_answer ), linalg.vec2{ -0.84, text_y_pos } ); 
-  text_y_pos -= LINE_HEIGHT
-
-  if input_active
-  {
-    text_draw_glyph( linalg.vec2{ -0.95 + 0.0272 * ( f32(str_len) +0.5 ), text_y_pos + LINE_HEIGHT }, '|' )
-
-    if keystates[KEY.BACKSPACE].pressed
-    {
-      s := str.to_string( sb_answer )
-      str.builder_reset( &sb_answer )
-      end := len(s)-1 >= 0 ? len(s)-1 : 0
-      str.write_string( &sb_answer, s[:end] )
-    }
-    if data.text_input_new
-    {
-      str.write_rune( &sb_answer, data.text_input_rune )
-    }
-
-    if keystates[KEY.ENTER].pressed
-    {
-      // answer = str.to_string( sb_answer )
-      input_active = false
-    }
-  }
-  else
-  {
-    // @TODO: put :227-397 into compare function
-  }
+  return comp_arr, comp_flag, correct
 }

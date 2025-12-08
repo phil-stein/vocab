@@ -7,9 +7,12 @@ for learning french using german & english
   - [X] use -flags for terminal or window mode
   - [X] add cursor to gui version
   - [ ] make cursor actually a rect
-  - [ ] seperate out compare logic from display_vocab_question()
-    - [ ] display_vocab_question_terminal()
-    - [ ] display_vocab_question_win()
+  - [X] seperate out compare logic from display_vocab_question()
+    - [X] display_vocab_question_terminal()
+    - [X] display_vocab_question_win()
+  - [ ] make log thing for past questions
   - [ ] style gui version
+    - [ ] drawing rects
+    - [ ] drawing imgs 
 
   
