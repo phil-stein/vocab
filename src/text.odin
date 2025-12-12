@@ -355,6 +355,15 @@ text_draw_glyph :: proc( pos: linalg.vec2, char: i32 )
   data.text.draw_calls += 1
 }
 
+text_draw_string_px :: proc( str: string, pos_px: linalg.ivec2 ) -> ( str_len: i32 )
+{
+  pos : linalg.vec2  
+  pos.x = f32(pos_px.x) / data.window_width
+  pos.y = f32(pos_px.y) / data.window_height
+
+  return text_draw_string( str, pos )
+}
+
 text_draw_string :: proc( str: string, pos: linalg.vec2 ) -> ( str_len: i32 )
 {
   _pos := pos

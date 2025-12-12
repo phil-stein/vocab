@@ -144,6 +144,7 @@ main :: proc()
     win.SetConsoleOutputCP( win.CODEPAGE(win.CP_UTF8) )
   }
 
+  // -- flags ---
   use_window := false
 
   for arg in os.args[1:]
@@ -278,15 +279,25 @@ display_vocab_question_win :: proc( voc: ^vocab_t )
   voc := voc
   // voc := rand.choice( vocab_arr[:] )
 
-  LINE_HEIGHT :: 0.075
-  text_y_pos : f32 = 0.75
-  text_draw_string( fmt.tprint( "EN:", voc.en ), linalg.vec2{ -0.95, text_y_pos } ); text_y_pos -= LINE_HEIGHT 
-  text_draw_string( fmt.tprint( "DE:", voc.de ), linalg.vec2{ -0.95, text_y_pos } ); text_y_pos -= LINE_HEIGHT
+  // LINE_HEIGHT :: 0.075
+  // text_y_pos : f32 = 0.75
+  // text_draw_string( fmt.tprint( "EN:", voc.en ), linalg.vec2{ -0.95, text_y_pos } ); text_y_pos -= LINE_HEIGHT 
+  // text_draw_string( fmt.tprint( "DE:", voc.de ), linalg.vec2{ -0.95, text_y_pos } ); text_y_pos -= LINE_HEIGHT
+  // 
+  // str_len : i32 = 0
+  // str_len += text_draw_string( "FR:", linalg.vec2{ -0.95, text_y_pos } ); 
+  //
+  // str_len += text_draw_string( str.to_string( sb_answer ), linalg.vec2{ -0.84, text_y_pos } ); 
+  // text_y_pos -= LINE_HEIGHT
+  LINE_HEIGHT :: 32
+  text_y_pos  := 80
+  text_draw_string_px( fmt.tprint( "EN:", voc.en ), linalg.ivec2{ 50, text_y_pos } ); text_y_pos -= LINE_HEIGHT 
+  text_draw_string_px( fmt.tprint( "DE:", voc.de ), linalg.ivec2{ 50, text_y_pos } ); text_y_pos -= LINE_HEIGHT
   
   str_len : i32 = 0
-  str_len += text_draw_string( "FR:", linalg.vec2{ -0.95, text_y_pos } ); 
+  str_len += text_draw_string_px( "FR:", linalg.vec2{ -0.95, text_y_pos } ); 
 
-  str_len += text_draw_string( str.to_string( sb_answer ), linalg.vec2{ -0.84, text_y_pos } ); 
+  str_len += text_draw_string_px( str.to_string( sb_answer ), linalg.vec2{ -0.84, text_y_pos } ); 
   text_y_pos -= LINE_HEIGHT
 
   if input_active

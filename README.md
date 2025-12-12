@@ -12,8 +12,8 @@ for learning french using german & english
     - [X] display_vocab_question_win()
   - [ ] make log thing for past questions
   - [ ] style gui version
+    - [ ] text line height relative to pixels 
     - [ ] drawing rects
     - [ ] drawing imgs 
-    - [ ] text line height relative to pixels 
 
   
